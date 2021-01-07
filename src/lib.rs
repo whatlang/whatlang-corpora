@@ -1,36 +1,30 @@
 use whatlang::Lang;
-
-const UKR: &'static str = include_str!("../corpora/ukr.txt");
-const RUS: &'static str = include_str!("../corpora/rus.txt");
-const ENG: &'static str = include_str!("../corpora/eng.txt");
-const CMN: &'static str = include_str!("../corpora/cmn.txt");
-const EPO: &'static str = include_str!("../corpora/epo.txt");
-const SPA: &'static str = include_str!("../corpora/spa.txt");
+use std::path::{Path, PathBuf};
 
 pub struct Corpus {
     lang: Lang,
-    text: &'static str
+    text: String
 }
 
 impl Corpus {
-    pub fn find(lang: Lang) -> Self {
-        let text = match lang {
-            Lang::Ukr => UKR,
-            Lang::Eng => ENG,
-            Lang::Rus => RUS,
-            Lang::Cmn => CMN,
-            Lang::Epo => EPO,
-            Lang::Spa => SPA,
-            _ => panic!(format!("No corpuse for {}", lang))
-        };
+    pub fn load(lang: Lang) -> Self {
+        let file_path: PathBuf = Path::new(file!())
+            .canonicalize().unwrap()
+            .parent().unwrap()
+            .parent().unwrap()
+            .join("corpora")
+            .join(format!("{}.txt", lang.code()));
+
+        let text = std::fs::read_to_string(file_path).unwrap();
+
         Self::new(lang, text)
     }
 
-    fn new(lang: Lang, text: &'static str) -> Self {
+    fn new(lang: Lang, text: String) -> Self {
         Self { lang, text }
     }
 
-    pub fn sentences(&self) ->  impl Iterator<Item=&'static str> {
+    pub fn sentences(&self) ->  impl Iterator<Item=&str> {
         self.text.split('\n')
     }
 }
@@ -41,12 +35,15 @@ mod tests {
 
     #[test]
     fn test_corpus() {
-        let corpus = Corpus::find(Lang::Ukr);
-
+        let corpus = Corpus::load(Lang::Ukr);
         assert_eq!(corpus.sentences().count(), 100_000);
-
-        for sentence in corpus.sentences().take(3) {
-            println!("{}", sentence);
-        }
     }
+
+    // #[test]
+    // fn test_print_all() {
+    //     for lang in Lang::values()  {
+    //         let code = lang.code();
+    //         println!("Lang::{:?} => include_str!(\"../corpora/{}.txt\"),", lang, lang.code());
+    //     }
+    // }
 }
