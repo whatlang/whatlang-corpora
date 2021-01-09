@@ -27,6 +27,10 @@ impl Corpus {
     pub fn sentences(&self) ->  impl Iterator<Item=&str> {
         self.text.split('\n')
     }
+
+    pub fn lang(&self) -> Lang {
+        self.lang
+    }
 }
 
 #[cfg(test)]
